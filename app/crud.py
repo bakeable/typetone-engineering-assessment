@@ -1,0 +1,34 @@
+from sqlalchemy.orm import Session
+from app.models import URLMapping
+from app.utils import generate_shortcode
+from datetime import datetime, timezone
+import uuid
+
+
+def create_url_mapping(db: Session, url: str, shortcode: str = None) -> URLMapping:
+    """Create a new URL mapping"""
+    if shortcode is None:
+        # Generate a unique shortcode
+        while True:
+            shortcode = generate_shortcode()
+            existing = get_url_mapping(db, shortcode)
+            if not existing:
+                break
+
+    db_mapping = URLMapping(
+        shortcode=shortcode, original_url=str(url), update_id=str(uuid.uuid4())
+    )
+    db.add(db_mapping)
+    db.commit()
+    db.refresh(db_mapping)
+    return db_mapping
+
+
+def get_url_mapping(db: Session, shortcode: str) -> URLMapping:
+    """Get URL mapping by shortcode"""
+    return db.query(URLMapping).filter(URLMapping.shortcode == shortcode).first()
+
+
+def shortcode_exists(db: Session, shortcode: str) -> bool:
+    """Check if a shortcode already exists"""
+    return get_url_mapping(db, shortcode) is not None
