@@ -100,3 +100,14 @@ async def update_url(
             status_code=status.HTTP_412_PRECONDITION_FAILED,
             detail="The provided url is invalid",
         )
+
+
+@app.get("/", tags=["Root"])
+async def root():
+    return {"message": "URL Shortening Service", "version": "1.0.0", "docs": "/docs"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
