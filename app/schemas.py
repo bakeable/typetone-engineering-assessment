@@ -17,3 +17,11 @@ class URLShortenRequest(BaseModel):
 class URLShortenResponse(BaseModel):
     shortcode: str
     update_id: str
+
+
+class URLUpdateRequest(BaseModel):
+    url: HttpUrl
+
+
+class URLUpdateResponse(BaseModel):
+    shortcode: str

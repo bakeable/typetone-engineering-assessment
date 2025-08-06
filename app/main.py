@@ -5,6 +5,8 @@ from app.models import Base
 from app.schemas import (
     URLShortenRequest,
     URLShortenResponse,
+    URLUpdateRequest,
+    URLUpdateResponse,
 )
 from app import crud
 from app.utils import is_valid_shortcode
@@ -60,4 +62,41 @@ async def shorten_url(request: URLShortenRequest, db: Session = Depends(get_db))
         raise HTTPException(
             status_code=status.HTTP_412_PRECONDITION_FAILED,
             detail="The provided shortcode/url is invalid",
+        )
+
+
+@app.post(
+    "/update/{update_id}",
+    response_model=URLUpdateResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def update_url(
+    update_id: str, request: URLUpdateRequest, db: Session = Depends(get_db)
+):
+    """
+    Update the URL for an existing shortcode using the update ID.
+    """
+    # Validate URL is present
+    if not request.url:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Url not present"
+        )
+
+    # Check if update_id exists
+    db_mapping = crud.get_url_mapping_by_update_id(db, update_id)
+    if not db_mapping:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The provided update ID does not exist",
+        )
+
+    try:
+        # Update the URL
+        updated_mapping = crud.update_url_mapping(db, update_id, request.url)
+
+        return URLUpdateResponse(shortcode=updated_mapping.shortcode)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_412_PRECONDITION_FAILED,
+            detail="The provided url is invalid",
         )

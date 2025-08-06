@@ -63,7 +63,7 @@ class TestURLShortening:
         assert "update_id" in data
 
     def test_shorten_url_duplicate_shortcode(self, clean_db):
-        """Test shortening URL with duplicate shortcode returns 409"""
+        """Test shortening URL with duplicate shortcode => 409"""
         # First request
         client.post(
             "/shorten",
@@ -78,11 +78,42 @@ class TestURLShortening:
         assert response.status_code == 409
 
     def test_shorten_url_without_url(self, clean_db):
-        """Test shortening without URL returns 422 (validation error)"""
+        """Test shortening without url returns 422"""
         response = client.post("/shorten", json={"shortcode": "test123"})
         assert response.status_code == 422
 
     def test_shorten_url_invalid_url(self, clean_db):
-        """Test shortening with invalid URL"""
         response = client.post("/shorten", json={"url": "not-a-valid-url"})
+        assert response.status_code == 422
+
+
+class TestURLUpdate:
+    """Test URL update functionality"""
+
+    def test_update_url_success(self, clean_db):
+        # Create a shortened URL first
+        create_response = client.post(
+            "/shorten",
+            json={"url": "https://www.example.com/", "shortcode": "update123"},
+        )
+        update_id = create_response.json()["update_id"]
+
+        # Update the URL
+        response = client.post(
+            f"/update/{update_id}", json={"url": "https://www.updated.com/"}
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["shortcode"] == "update123"
+
+    def test_update_url_invalid_update_id(self, clean_db):
+        """Test update with invalid update_id returns 401"""
+        response = client.post(
+            "/update/invalid-update-id", json={"url": "https://www.example.com/"}
+        )
+        assert response.status_code == 401
+
+    def test_update_url_without_url(self, clean_db):
+        """Test update without URL returns 422"""
+        response = client.post("/update/some-id", json={})
         assert response.status_code == 422

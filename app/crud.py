@@ -32,3 +32,21 @@ def get_url_mapping(db: Session, shortcode: str) -> URLMapping:
 def shortcode_exists(db: Session, shortcode: str) -> bool:
     """Check if a shortcode already exists"""
     return get_url_mapping(db, shortcode) is not None
+
+
+def get_url_mapping_by_update_id(db: Session, update_id: str) -> URLMapping:
+    """Get URL mapping by update ID"""
+    return db.query(URLMapping).filter(URLMapping.update_id == update_id).first()
+
+
+def update_url_mapping(db: Session, update_id: str, new_url: str) -> URLMapping:
+    """Update the URL for an existing mapping using update ID"""
+    # Get the mapping by update id
+    db_mapping = get_url_mapping_by_update_id(db, update_id)
+
+    if db_mapping:
+        db_mapping.original_url = str(new_url)
+        db.commit()
+        db.refresh(db_mapping)
+
+    return db_mapping
