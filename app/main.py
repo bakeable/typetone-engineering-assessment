@@ -6,6 +6,7 @@ from app.models import Base
 from app.schemas import (
     URLShortenRequest,
     URLShortenResponse,
+    URLStatsResponse,
     URLUpdateRequest,
     URLUpdateResponse,
 )
@@ -119,6 +120,24 @@ async def redirect_to_url(shortcode: str, db: Session = Depends(get_db)):
 
     return RedirectResponse(
         url=db_mapping.original_url, status_code=status.HTTP_302_FOUND
+    )
+
+
+@app.get("/{shortcode}/stats", response_model=URLStatsResponse)
+async def get_url_stats(shortcode: str, db: Session = Depends(get_db)):
+    """
+    Get statistics for a shortcode including creation time, last redirect, and redirect count.
+    """
+    db_mapping = crud.get_url_mapping(db, shortcode)
+    if not db_mapping:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Shortcode not found"
+        )
+
+    return URLStatsResponse(
+        created=db_mapping.created_at,
+        lastRedirect=db_mapping.last_redirect,
+        redirectCount=db_mapping.redirect_count,
     )
 
 

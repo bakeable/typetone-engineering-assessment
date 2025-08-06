@@ -139,3 +139,48 @@ class TestURLRedirect:
         """Test redirect with non-existent shortcode returns 404"""
         response = client.get("/nonexistent")
         assert response.status_code == 404
+
+
+class TestURLStats:
+    """Test URL statistics functionality"""
+
+    def test_get_stats_success(self, clean_db):
+        """Test getting stats for existing shortcode"""
+        # Create a shortened URL first
+        client.post(
+            "/shorten",
+            json={"url": "https://www.example.com/", "shortcode": "stats123"},
+        )
+
+        # Get stats
+        response = client.get("/stats123/stats")
+        assert response.status_code == 200
+        data = response.json()
+        assert "created" in data
+        assert "redirectCount" in data
+        assert data["redirectCount"] == 0
+        assert data["lastRedirect"] is None
+
+    def test_get_stats_after_redirect(self, clean_db):
+        """Test stats after performing redirects"""
+        # Create a shortened URL first
+        client.post(
+            "/shorten",
+            json={"url": "https://www.example.com/", "shortcode": "stats456"},
+        )
+
+        # Perform redirects
+        client.get("/stats456", follow_redirects=False)
+        client.get("/stats456", follow_redirects=False)
+
+        # Get stats
+        response = client.get("/stats456/stats")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["redirectCount"] == 2
+        assert data["lastRedirect"] is not None
+
+    def test_get_stats_not_found(self, clean_db):
+        """Test getting stats for non-existent shortcode returns 404"""
+        response = client.get("/nonexistent/stats")
+        assert response.status_code == 404

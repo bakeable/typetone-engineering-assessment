@@ -1,4 +1,5 @@
-from pydantic import BaseModel, HttpUrl, field_validator
+from datetime import datetime
+from pydantic import BaseModel, ConfigDict, HttpUrl, field_validator
 from typing import Optional
 
 
@@ -25,3 +26,11 @@ class URLUpdateRequest(BaseModel):
 
 class URLUpdateResponse(BaseModel):
     shortcode: str
+
+
+class URLStatsResponse(BaseModel):
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
+
+    created: datetime
+    lastRedirect: Optional[datetime] = None
+    redirectCount: int

@@ -41,6 +41,8 @@ class TestCRUDOperations:
         assert len(mapping.shortcode) == 6, "Shortcode should be 6 characters"
         assert mapping.update_id is not None
         assert mapping.created_at is not None
+        assert mapping.last_redirect is None
+        assert mapping.redirect_count == 0
 
     def test_create_url_mapping_with_shortcode(self, db_session):
         """Should create a URL mapping with a custom shortcode."""
