@@ -50,3 +50,14 @@ def update_url_mapping(db: Session, update_id: str, new_url: str) -> URLMapping:
         db.refresh(db_mapping)
 
     return db_mapping
+
+
+def increment_redirect_count(db: Session, shortcode: str) -> URLMapping:
+    """Increment redirect count and update last redirect time"""
+    db_mapping = get_url_mapping(db, shortcode)
+    if db_mapping:
+        db_mapping.redirect_count += 1
+        db_mapping.last_redirect = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(db_mapping)
+    return db_mapping

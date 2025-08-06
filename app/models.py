@@ -14,3 +14,6 @@ class URLMapping(Base):
     )
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    last_redirect = Column(DateTime(timezone=True), nullable=True)
+    redirect_count = Column(Integer, default=0)

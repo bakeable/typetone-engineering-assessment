@@ -117,3 +117,25 @@ class TestURLUpdate:
         """Test update without URL returns 422"""
         response = client.post("/update/some-id", json={})
         assert response.status_code == 422
+
+
+class TestURLRedirect:
+    """Test URL redirect functionality"""
+
+    def test_redirect_success(self, clean_db):
+        """Test successful redirect"""
+        # Create a shortened URL first
+        client.post(
+            "/shorten",
+            json={"url": "https://www.example.com/", "shortcode": "redirect123"},
+        )
+
+        # Test redirect
+        response = client.get("/redirect123", follow_redirects=False)
+        assert response.status_code == 302
+        assert response.headers["location"] == "https://www.example.com/"
+
+    def test_redirect_not_found(self, clean_db):
+        """Test redirect with non-existent shortcode returns 404"""
+        response = client.get("/nonexistent")
+        assert response.status_code == 404

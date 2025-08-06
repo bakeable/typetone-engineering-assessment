@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from app.database import get_db, engine
 from app.models import Base
@@ -100,6 +101,25 @@ async def update_url(
             status_code=status.HTTP_412_PRECONDITION_FAILED,
             detail="The provided url is invalid",
         )
+
+
+@app.get("/{shortcode}")
+async def redirect_to_url(shortcode: str, db: Session = Depends(get_db)):
+    """
+    Redirect to the original URL using the shortcode.
+    """
+    db_mapping = crud.get_url_mapping(db, shortcode)
+    if not db_mapping:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Shortcode not found"
+        )
+
+    # Increment redirect count and update last redirect time
+    crud.increment_redirect_count(db, shortcode)
+
+    return RedirectResponse(
+        url=db_mapping.original_url, status_code=status.HTTP_302_FOUND
+    )
 
 
 @app.get("/", tags=["Root"])
