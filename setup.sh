@@ -26,3 +26,11 @@ poetry add --group dev pytest pytest-asyncio httpx pytest-cov
 
 # Create directory structure
 mkdir -p app tests alembic/versions .vscode
+
+# Create initial files
+poetry run alembic init alembic
+
+# Create postgres database
+psql -U postgres -c "CREATE DATABASE url_shortener;"
+psql -U postgres -c "CREATE USER myuser WITH PASSWORD 'mypass';"
+psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE url_shortener TO myuser;"
