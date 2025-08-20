@@ -26,7 +26,9 @@ app = FastAPI(
 @app.post(
     "/shorten", response_model=URLShortenResponse, status_code=status.HTTP_201_CREATED
 )
-async def shorten_url(request: URLShortenRequest, db: AsyncSession = Depends(get_async_db)):
+async def shorten_url(
+    request: URLShortenRequest, db: AsyncSession = Depends(get_async_db)
+):
     """
     Shorten a URL with optional custom shortcode.
 

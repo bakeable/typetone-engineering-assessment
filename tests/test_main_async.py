@@ -52,7 +52,9 @@ class TestURLShortening:
     @pytest.mark.asyncio
     async def test_shorten_url_without_shortcode(self, clean_db, async_client):
         """Test shortening URL without providing shortcode"""
-        response = await async_client.post("/shorten", json={"url": "https://www.example.com/"})
+        response = await async_client.post(
+            "/shorten", json={"url": "https://www.example.com/"}
+        )
         assert response.status_code == 201
         data = response.json()
         assert "shortcode" in data
@@ -73,9 +75,7 @@ class TestURLShortening:
     @pytest.mark.asyncio
     async def test_shorten_url_missing_url(self, clean_db, async_client):
         """Test error when URL is missing"""
-        response = await async_client.post(
-            "/shorten", json={"shortcode": "test"}
-        )
+        response = await async_client.post("/shorten", json={"shortcode": "test"})
         assert response.status_code == 422  # Pydantic validation error
 
     @pytest.mark.asyncio
@@ -91,7 +91,7 @@ class TestURLShortening:
         )
         assert response.status_code == 409
 
-    @pytest.mark.asyncio 
+    @pytest.mark.asyncio
     async def test_shorten_url_empty_shortcode(self, clean_db, async_client):
         """Test error when providing empty shortcode"""
         response = await async_client.post("/shorten", json={"shortcode": "test123"})

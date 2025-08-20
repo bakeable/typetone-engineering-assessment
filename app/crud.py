@@ -6,7 +6,9 @@ from datetime import datetime, timezone
 import uuid
 
 
-async def create_url_mapping(db: AsyncSession, url: str, shortcode: str = None) -> URLMapping:
+async def create_url_mapping(
+    db: AsyncSession, url: str, shortcode: str = None
+) -> URLMapping:
     """Create a new URL mapping"""
     if shortcode is None:
         # Generate a unique shortcode
@@ -27,7 +29,9 @@ async def create_url_mapping(db: AsyncSession, url: str, shortcode: str = None) 
 
 async def get_url_mapping(db: AsyncSession, shortcode: str) -> URLMapping:
     """Get URL mapping by shortcode"""
-    result = await db.execute(select(URLMapping).filter(URLMapping.shortcode == shortcode))
+    result = await db.execute(
+        select(URLMapping).filter(URLMapping.shortcode == shortcode)
+    )
     return result.scalar_one_or_none()
 
 
@@ -39,11 +43,15 @@ async def shortcode_exists(db: AsyncSession, shortcode: str) -> bool:
 
 async def get_url_mapping_by_update_id(db: AsyncSession, update_id: str) -> URLMapping:
     """Get URL mapping by update ID"""
-    result = await db.execute(select(URLMapping).filter(URLMapping.update_id == update_id))
+    result = await db.execute(
+        select(URLMapping).filter(URLMapping.update_id == update_id)
+    )
     return result.scalar_one_or_none()
 
 
-async def update_url_mapping(db: AsyncSession, update_id: str, new_url: str) -> URLMapping:
+async def update_url_mapping(
+    db: AsyncSession, update_id: str, new_url: str
+) -> URLMapping:
     """Update the URL for an existing mapping using update ID"""
     # Get the mapping by update id
     db_mapping = await get_url_mapping_by_update_id(db, update_id)
