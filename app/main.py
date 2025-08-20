@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.responses import RedirectResponse
-from sqlalchemy.orm import Session
-from app.database import get_db, engine
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_async_db, engine
 from app.models import Base
 from app.schemas import (
     URLShortenRequest,
@@ -13,7 +13,7 @@ from app.schemas import (
 from app import crud
 from app.utils import is_valid_shortcode
 
-# Create database tables
+# Create database tables (sync for now, can be made async in production)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -26,7 +26,7 @@ app = FastAPI(
 @app.post(
     "/shorten", response_model=URLShortenResponse, status_code=status.HTTP_201_CREATED
 )
-async def shorten_url(request: URLShortenRequest, db: Session = Depends(get_db)):
+async def shorten_url(request: URLShortenRequest, db: AsyncSession = Depends(get_async_db)):
     """
     Shorten a URL with optional custom shortcode.
 
@@ -46,14 +46,14 @@ async def shorten_url(request: URLShortenRequest, db: Session = Depends(get_db))
                 detail="The provided shortcode/url is invalid",
             )
 
-        if crud.shortcode_exists(db, request.shortcode):
+        if await crud.shortcode_exists(db, request.shortcode):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="Shortcode already in use"
             )
 
     try:
         # Create the URL mapping
-        db_mapping = crud.create_url_mapping(
+        db_mapping = await crud.create_url_mapping(
             db=db, url=request.url, shortcode=request.shortcode
         )
 
@@ -73,7 +73,7 @@ async def shorten_url(request: URLShortenRequest, db: Session = Depends(get_db))
     status_code=status.HTTP_201_CREATED,
 )
 async def update_url(
-    update_id: str, request: URLUpdateRequest, db: Session = Depends(get_db)
+    update_id: str, request: URLUpdateRequest, db: AsyncSession = Depends(get_async_db)
 ):
     """
     Update the URL for an existing shortcode using the update ID.
@@ -85,7 +85,7 @@ async def update_url(
         )
 
     # Check if update_id exists
-    db_mapping = crud.get_url_mapping_by_update_id(db, update_id)
+    db_mapping = await crud.get_url_mapping_by_update_id(db, update_id)
     if not db_mapping:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -94,7 +94,7 @@ async def update_url(
 
     try:
         # Update the URL
-        updated_mapping = crud.update_url_mapping(db, update_id, request.url)
+        updated_mapping = await crud.update_url_mapping(db, update_id, request.url)
 
         return URLUpdateResponse(shortcode=updated_mapping.shortcode)
     except Exception as e:
@@ -105,18 +105,18 @@ async def update_url(
 
 
 @app.get("/{shortcode}")
-async def redirect_to_url(shortcode: str, db: Session = Depends(get_db)):
+async def redirect_to_url(shortcode: str, db: AsyncSession = Depends(get_async_db)):
     """
     Redirect to the original URL using the shortcode.
     """
-    db_mapping = crud.get_url_mapping(db, shortcode)
+    db_mapping = await crud.get_url_mapping(db, shortcode)
     if not db_mapping:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Shortcode not found"
         )
 
     # Increment redirect count and update last redirect time
-    crud.increment_redirect_count(db, shortcode)
+    await crud.increment_redirect_count(db, shortcode)
 
     return RedirectResponse(
         url=db_mapping.original_url, status_code=status.HTTP_302_FOUND
@@ -124,11 +124,11 @@ async def redirect_to_url(shortcode: str, db: Session = Depends(get_db)):
 
 
 @app.get("/{shortcode}/stats", response_model=URLStatsResponse)
-async def get_url_stats(shortcode: str, db: Session = Depends(get_db)):
+async def get_url_stats(shortcode: str, db: AsyncSession = Depends(get_async_db)):
     """
     Get statistics for a shortcode including creation time, last redirect, and redirect count.
     """
-    db_mapping = crud.get_url_mapping(db, shortcode)
+    db_mapping = await crud.get_url_mapping(db, shortcode)
     if not db_mapping:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Shortcode not found"

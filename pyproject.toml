@@ -10,13 +10,16 @@ requires-python = "^3.9"
 dependencies = [
     "fastapi (>=0.116.1,<0.117.0)",
     "uvicorn[standard] (>=0.35.0,<0.36.0)",
-    "sqlalchemy (>=2.0.42,<3.0.0)",
+    "sqlalchemy[asyncio] (>=2.0.42,<3.0.0)",
+    "asyncpg (>=0.29.0,<1.0.0)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
     "pydantic (>=2.11.7,<3.0.0)",
     "python-dotenv (>=1.1.1,<2.0.0)",
     "alembic (>=1.16.4,<2.0.0)"
 ]
-packages = [{include = "app"}]
+
+[tool.poetry]
+package-mode = false
 
 
 [build-system]
@@ -28,6 +31,7 @@ pytest = "^8.4.1"
 pytest-asyncio = "^1.1.0"
 httpx = "^0.28.1"
 pytest-cov = "^6.2.1"
+aiosqlite = "^0.20.0"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
